@@ -1,0 +1,117 @@
+local client = game:GetService("Players").LocalPlayer
+local camera = workspace.CurrentCamera
+local mouse = client:GetMouse()
+local players = game:GetService("Players")
+local rs = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
+
+game.StarterGui:SetCore("ChatMakeSystemMessage", {
+    Text = "Recommend that you set your camera sensitivity to [0.2]"; --chat notification
+    Font = Enum.Font.SourceSansBold; --font changeable
+    FontSize = Enum.FontSize.Size24; --font size changeable
+})
+
+
+if getgenv().aim_smooth == nil then
+    getgenv().aim_smooth = 2
+    getgenv().fov = 400
+end
+
+if getgenv().aim_at == nil then
+    getgenv().aim_at = "Head"
+end
+
+if not getgenv().FontValue then
+    local teams
+    for key, value in pairs(getgc(true)) do
+        if type(value) == "table" and rawget(value, "Teams") then
+            local Teamtable = value.Teams
+            if type(Teamtable) == "table" then
+                teams = Teamtable
+            end
+            break
+        end
+    end
+
+
+    local old_index
+    old_index = hookmetamethod(game, "__index", function(t, i)
+        if checkcaller() and i == "Team" or i == "TeamColor" then
+            local pp = teams[t]
+            if pp ~= nil then
+                return pp
+            end
+        end
+        return old_index(t, i)
+    end)
+end
+
+
+
+if getgenv().visibleCheck == nil then
+    getgenv().visibleCheck = true
+end
+
+local function isVisible(p,...)
+    if getgenv().visibleCheck == false then
+        return true
+    end
+
+    return #camera:GetPartsObscuringTarget({p}, {camera, client.Character,...}) == 0
+end
+
+
+local function closestPlayer(fov)
+    local target = nil
+    local closest = fov or math.huge
+    for i,v in ipairs(players:GetPlayers()) do
+        local character
+        if v.character then
+            character = v.Character
+        else
+            return nil
+        end
+        if v.Character ~= nil and v.Character:FindFirstChildOfClass("Humanoid") ~= nil and v.Character:FindFirstChild("HumanoidRootPart") ~= nil and v.Character:FindFirstChildOfClass("Humanoid").Health > 0 and v.Character:FindFirstChild("Head") ~= nil and v.TeamColor ~= client.TeamColor then
+            local _, onscreen = camera:WorldToScreenPoint(character.Head.Position)
+            if onscreen then
+                local targetPos = camera:WorldToViewportPoint(character.Head.Position)
+                local mousePos = camera:WorldToViewportPoint(mouse.Hit.p)
+                local dist = (Vector2.new(mousePos.X, mousePos.Y) - Vector2.new(targetPos.X, targetPos.Y)).magnitude
+                if dist < closest and isVisible(character.Head.Position, character) then
+                    closest = dist
+                    target = v
+                end
+            end
+        end
+    end
+    return target
+end
+
+local function aimAt(pos,smooth)
+    local targetPos = camera:WorldToScreenPoint(pos)
+    local mousePos = camera:WorldToScreenPoint(mouse.Hit.p)
+    mousemoverel((targetPos.X-mousePos.X)/smooth,(targetPos.Y-mousePos.Y)/smooth)
+end
+
+
+local isAiming = false
+uis.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.KeyCode.B then
+        isAiming = true
+    end
+end)
+
+uis.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.KeyCode.B then
+        isAiming = false
+    end
+end)
+
+rs.RenderStepped:connect(function()
+    if isAiming then
+        local t = closestPlayer(getgenv().fov)
+        if t then
+            aimAt(t.Character[getgenv().aim_at].Position,getgenv().aim_smooth)
+        end
+    end
+end)
