@@ -60,7 +60,7 @@ local function Reeling()
                     if playerbar and fish then
                         local fishX = fish:GetMemoryValue(0x2f0, "float")
                         if fishX then
-                            local clampedX = math.clamp(fishX, 0.15, 1)
+                            local clampedX = math.clamp(fishX, 0.15, 0.8)
                             playerbar:SetMemoryValue(0x2f0, "float", clampedX)
                         end
                     end
