@@ -36,13 +36,10 @@ local function Shake()
                     keypress(0xDC)
                     backslashpressed = true
                 end
-                
                 keypress(0x53)    
                 keyrelease(0x53)
-                
                 keypress(0x0D)    
                 keyrelease(0x0D)
-                
                 wait(0.01)
             else
                 keyrelease(0xDC)
@@ -69,8 +66,13 @@ local function Reeling()
                     if playerbar and fish then
                         local fishX = fish:GetMemoryValue(0x2f0, "float")
                         if fishX then
-                            local clampedX = math.clamp(fishX, 0.15, 0.9)
-                            playerbar:SetMemoryValue(0x2f0, "float", clampedX)
+                            local clampedX = math.clamp(fishX, 0.15, 0.85)
+                            local currentX = playerbar:GetMemoryValue(0x2f0, "float")
+                            
+                            local smoothSpeed = 0.1 
+                            local newX = currentX + (clampedX - currentX) * smoothSpeed
+                            
+                            playerbar:SetMemoryValue(0x2f0, "float", newX)
                         end
                     end
                 end
