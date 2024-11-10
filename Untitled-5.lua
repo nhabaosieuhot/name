@@ -108,7 +108,7 @@ local function Reeling()
             local fish = bar:FindFirstChild("fish")
             
             if not playerbar or not fish then
-                warn("[Reeling Debug] Missing playerbar or fish")
+                warn("[Reeling Debug] Can't retrieve playerbar, fishbar")
                 continue
             end
             
@@ -118,12 +118,12 @@ local function Reeling()
             end)
             
             if not success2 then
-                warn("[Reeling Debug] Can not get fish position value:", getError)
+                warn("[Reeling Debug] Failed to get fishbar value:", getError)
                 continue
             end
             
             if not fishX then
-                warn("[Reeling Debug] Can not get fish position value")
+                warn("[Reeling Debug] Failed to get fishbar value")
                 continue
             end
             
@@ -133,7 +133,7 @@ local function Reeling()
             end)
             
             if not success3 then
-                warn("[Reeling Debug] Failed playerbar position:", setError)
+                warn("[Reeling Debug] Failed to get playerbar value", setError)
                 continue
             end
         end
