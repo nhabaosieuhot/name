@@ -1,0 +1,125 @@
+local Path = game.Workspace.world.chests
+local Camera = game.Workspace.CurrentCamera
+local Table = {}
+
+local function getChests()
+    local success, error = pcall(function()
+        local cachedChests = {Lastupdate = 0}
+        
+        while true do
+            wait(1)
+            
+            local GetChildren = Path:GetChildren()
+            if not GetChildren then continue end
+            
+            local current = tick()
+            if current - cachedChests.Lastupdate > 0.5 then
+                table.clear(cachedChests)
+                cachedChests.Lastupdate = current
+                
+                for _, v in ipairs(GetChildren) do
+                    if v and (v.ClassName == "Part" or v.ClassName == "MeshPart") then
+                        if v.Parent then
+                            table.insert(cachedChests, v)
+                        end
+                    end
+                end
+                
+                for _, v in ipairs(cachedChests) do
+                    if v and not Table[v] then
+                        Table[v] = {
+                            ["PrimaryPart"] = v,
+                            ["Drawing"] = Drawing.new("Text"),
+                            ["Circle"] = Drawing.new("Circle")
+                        }
+                    end
+                end
+            end
+        end
+    end)
+    
+    if not success then
+        warn("Error in getChests function:", error)
+        wait(1)
+        getChests()
+    end
+end
+
+local function draw()
+    local success, error = pcall(function()
+        while true do
+            wait()
+            
+            for i, v in pairs(Table) do
+                if type(v) ~= "table" then continue end
+                
+                local PrimaryPart = v.PrimaryPart
+                local Drawing = v.Drawing
+                local Circle = v.Circle
+
+                if not PrimaryPart or not Drawing then
+                    if Drawing then Drawing:Remove() end
+                    if Circle then Circle:Remove() end
+                    Table[i] = nil
+                    continue
+                end
+                
+                if PrimaryPart.Parent then
+                    local success2, error2 = pcall(function()
+                        local Pos3D = PrimaryPart.CFrame.Position
+                        local Pos2D, OnScreen = Camera:WorldToScreenPoint(Pos3D)
+                        
+                        if OnScreen then
+                            local Distance = math.floor(math.sqrt(
+                                (Camera.CFrame.Position.x - Pos3D.x) ^ 2 + 
+                                (Camera.CFrame.Position.y - Pos3D.y) ^ 2 + 
+                                (Camera.CFrame.Position.z - Pos3D.z) ^ 2
+                            ))
+                            
+                            Drawing.Position = {Pos2D.x, Pos2D.y}
+                            Drawing.Text = string.format("[%s]\n D: [%d]", PrimaryPart.Name, Distance)
+                            Drawing.Color = {255, 255, 255}
+                            Drawing.Outline = true
+                            Drawing.OutlineColor = {0, 0, 0}
+                            Drawing.Size = 12
+                            Drawing.Center = true
+                            Drawing.Visible = true
+                            Drawing.Font = 2
+
+                            Circle.Visible = true
+                            Circle.Color = {255, 255, 0}
+                            Circle.Filled = false
+                            Circle.Radius = 10
+                            Circle.Position = {Pos2D.x, Pos2D.y - 15}
+                            Circle.Thickness = 1
+                            Circle.NumSides = 32
+                        else
+                            Drawing.Visible = false
+                            Circle.Visible = false
+                        end
+                    end)
+                    
+                    if not success2 then
+                        warn("Drawing error:", error2)
+                        Drawing:Remove()
+                        Circle:Remove()
+                        Table[i] = nil
+                    end
+                else
+                    Drawing:Remove()
+                    Circle:Remove()
+                    Table[i] = nil
+                end
+            end
+        end
+    end)
+    
+    if not success then
+        warn("Error in draw function:", error)
+        wait(1)
+        draw()
+    end
+end 
+
+spawn(getChests)
+spawn(draw)
