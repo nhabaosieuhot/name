@@ -2,6 +2,7 @@ _G.Toggle = false
 local function getCasting()
     local cached = tick()
     local pressed = false
+    local lastAutocast = 0
     
     while true do
         local success, err = pcall(function()
@@ -12,7 +13,7 @@ local function getCasting()
                         pressed = false
                     end
                     wait()
-                    continue 
+                    continue
                 end
                 
                 local current = tick()
@@ -37,8 +38,15 @@ local function getCasting()
                                         _G.CastedValue = RluaCast.Value
                                     end
                                 end
+                                
+                                -- Reset pressed state if not casting
+                                if _G.CastedValue == false then
+                                    pressed = false
+                                end
+                                
                                 if _G.CastedValue ~= true then
                                     if not pressed then
+                                        print("Attempting cast, Toggle:", _G.Toggle)
                                         mouse1press()
                                         pressed = true
                                         cached = tick()
@@ -64,6 +72,7 @@ local function getCasting()
                                                                 mouse1release()
                                                                 pressed = false
                                                                 cached = current
+                                                                print("Perfect cast released")
                                                             end
                                                         elseif pressed then
                                                             local holdTime = current - cached
@@ -71,6 +80,7 @@ local function getCasting()
                                                                 mouse1release()
                                                                 pressed = false
                                                                 cached = current
+                                                                print("Timeout release")
                                                             end
                                                         end
                                                     end
@@ -82,13 +92,18 @@ local function getCasting()
                             end
                         end
                     end
+                    
+                    -- Auto recast logic
                     if current - cached > 50 then
-                        if pressed then
+                        if current - lastAutocast > 5 then  -- Prevent spam
+                            print("Attempting auto-recast")
                             mouse1press()
                             wait(0.5)
                             mouse1release()
                             pressed = false
                             cached = current
+                            lastAutocast = current
+                            print("Auto-recast complete")
                         end
                     end
                 end
@@ -101,6 +116,7 @@ local function getCasting()
             if pressed then
                 mouse1release()
             end
+            pressed = false  -- Reset state on error
             wait(1)
         end
     end
@@ -252,7 +268,7 @@ local function keycheck()
     while true do
         local current = tick()
         for _, key in ipairs(getpressedkeys()) do
-            if key == "F1" and current - cached > 0.5 then
+            if key == "F1" and current - cached > 0.8 then
                 _G.Toggle = not _G.Toggle
                 cached = current
             end
@@ -263,6 +279,7 @@ local function keycheck()
                 Text1.Color = {255,0,0}
                 Text2.Color = {0,255,0}
             end
+            wait(0.1)
         end
         wait()
     end
