@@ -39,7 +39,6 @@ local function getCasting()
                                     end
                                 end
                                 
-                                -- Reset pressed state if not casting
                                 if _G.CastedValue == false then
                                     pressed = false
                                 end
@@ -72,7 +71,6 @@ local function getCasting()
                                                                 mouse1release()
                                                                 pressed = false
                                                                 cached = current
-                                                                print("Perfect cast released")
                                                             end
                                                         elseif pressed then
                                                             local holdTime = current - cached
@@ -80,7 +78,6 @@ local function getCasting()
                                                                 mouse1release()
                                                                 pressed = false
                                                                 cached = current
-                                                                print("Timeout release")
                                                             end
                                                         end
                                                     end
@@ -93,17 +90,14 @@ local function getCasting()
                         end
                     end
                     
-                    -- Auto recast logic
                     if current - cached > 50 then
-                        if current - lastAutocast > 5 then  -- Prevent spam
-                            print("Attempting auto-recast")
+                        if current - lastAutocast > 5 then
                             mouse1press()
                             wait(0.5)
                             mouse1release()
                             pressed = false
                             cached = current
                             lastAutocast = current
-                            print("Auto-recast complete")
                         end
                     end
                 end
@@ -116,7 +110,7 @@ local function getCasting()
             if pressed then
                 mouse1release()
             end
-            pressed = false  -- Reset state on error
+            pressed = false
             wait(1)
         end
     end
