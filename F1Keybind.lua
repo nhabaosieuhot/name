@@ -82,6 +82,15 @@ local function getCasting()
                             end
                         end
                     end
+                    if current - cached > 50 then
+                        if pressed then
+                            mouse1press()
+                            wait(0.5)
+                            mouse1release()
+                            pressed = false
+                            cached = current
+                        end
+                    end
                 end
                 wait()
             end
